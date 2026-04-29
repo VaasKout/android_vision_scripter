@@ -1,0 +1,44 @@
+package filesdb
+
+import (
+	"android_vision_scripter/pkg/core/file"
+	"fmt"
+	"path/filepath"
+)
+
+// Create ...
+type Create interface {
+	CreateLogsDir(args ...string) string
+	CreateDBDir(args ...string) string
+	CreateScrcpyDir(args ...string) string
+}
+
+// CreateLogsDir ...
+func (f *filesDBImpl) CreateLogsDir(args ...string) string {
+	var dirName = filepath.Join(f.filesProps.Logs, filepath.Join(args...))
+	if ok := file.CreateDirIfNotExist(dirName); !ok {
+		fmt.Printf("Couldn't create dir %s\n", dirName)
+		return ""
+	}
+	return dirName
+}
+
+// CreateLogsDir ...
+func (f *filesDBImpl) CreateScrcpyDir(args ...string) string {
+	var dirName = filepath.Join(f.filesProps.Scrcpy, filepath.Join(args...))
+	if ok := file.CreateDirIfNotExist(dirName); !ok {
+		fmt.Printf("couldn't create dir %s\n", dirName)
+		return ""
+	}
+	return dirName
+}
+
+// CreateDBDir ...
+func (f *filesDBImpl) CreateDBDir(args ...string) string {
+	var dirName = filepath.Join(f.filesProps.ScriptsDB, filepath.Join(args...))
+	if ok := file.CreateDirIfNotExist(dirName); !ok {
+		fmt.Printf("couldn't create dir %s\n", dirName)
+		return ""
+	}
+	return dirName
+}

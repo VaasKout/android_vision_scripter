@@ -1,0 +1,106 @@
+// Package config ...
+package config
+
+import (
+	"os"
+	"path/filepath"
+	"strconv"
+)
+
+// Default values
+const (
+	BasePath       = "android_vision_scripter"
+	LogsDir        = "logs"
+	ScriptsDBDir   = "script_db"
+	ScrcpyDir      = "scrcpy"
+	ScrcpyVersion  = "3.3.4"
+	ServerPort     = ":8080"
+	BaseSocketPort = 3001
+)
+
+// Config ...
+type Config struct {
+	ServerProps *ServerProps
+	FilesProps  *FilesProps
+	ScrcpyProps *ScrcpyProps
+}
+
+// ServerProps ...
+type ServerProps struct {
+	Port       string
+	SocketPort int
+}
+
+// FilesProps ...
+type FilesProps struct {
+	Logs      string
+	ScriptsDB string
+	Scrcpy    string
+}
+
+// ScrcpyProps ...
+type ScrcpyProps struct {
+	ScrcpyVersion string
+}
+
+// New ...
+func New() *Config {
+	port := os.Getenv("SERVER_PORT")
+	if port == "" {
+		port = ServerPort
+	}
+
+	var baseSocketPort = BaseSocketPort
+	socketPort := os.Getenv("SOCKET_PORT")
+	if socketPort != "" {
+		socketPortInt, err := strconv.ParseInt(socketPort, 10, 32)
+		if err == nil {
+			baseSocketPort = int(socketPortInt)
+		}
+	}
+
+	basePath := os.Getenv("BASE_PATH")
+	if basePath == "" {
+		basePath = BasePath
+	}
+	userCacheDir, err := os.UserCacheDir()
+	if err != nil {
+		panic(err)
+	}
+	cachePath := filepath.Join(userCacheDir, basePath)
+
+	logsDir := os.Getenv("LOGS")
+	if logsDir == "" {
+		logsDir = LogsDir
+	}
+
+	scriptsDBDir := os.Getenv("SCRIPT_DB")
+	if scriptsDBDir == "" {
+		scriptsDBDir = ScriptsDBDir
+	}
+
+	scrcpyDir := os.Getenv("SCRCPY_DIR")
+	if scrcpyDir == "" {
+		scrcpyDir = ScrcpyDir
+	}
+
+	scrcpyVersion := os.Getenv("SCRCPY_VERSION")
+	if scrcpyVersion == "" {
+		scrcpyVersion = ScrcpyVersion
+	}
+
+	return &Config{
+		ServerProps: &ServerProps{
+			Port:       port,
+			SocketPort: baseSocketPort,
+		},
+		FilesProps: &FilesProps{
+			Logs:      filepath.Join(cachePath, logsDir),
+			ScriptsDB: filepath.Join(cachePath, scriptsDBDir),
+			Scrcpy:    filepath.Join(cachePath, scrcpyDir),
+		},
+		ScrcpyProps: &ScrcpyProps{
+			ScrcpyVersion: scrcpyVersion,
+		},
+	}
+}
