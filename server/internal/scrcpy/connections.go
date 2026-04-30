@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"gocv.io/x/gocv"
 )
@@ -207,15 +208,29 @@ func (s *scrcpyImpl) startSocketConn(connPort int) (net.Conn, error) {
 
 func (s *scrcpyImpl) readMetaData(conn net.Conn) (width, height int) {
 	var dummyByte = make([]byte, 1)
-	_, err := conn.Read(dummyByte)
-	if err != nil {
-		s.logAPI.Error(err.Error())
-		return width, height
+	for i := range ConnAttempts {
+		_, err := conn.Read(dummyByte)
+		if err != nil {
+			s.logAPI.Error(
+				fmt.Sprintf(
+					"failed to read dummy byte - attempt: %d, err:%v",
+					i+1,
+					err.Error(),
+				),
+			)
+
+			if i == ConnAttempts-1 {
+				return width, height
+			}
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
 	}
 	s.logAPI.Info(fmt.Sprintf("dummy byte: %v", dummyByte))
 
 	var deviceName = make([]byte, 64)
-	_, err = conn.Read(deviceName)
+	_, err := conn.Read(deviceName)
 	if err != nil {
 		s.logAPI.Error(err.Error())
 		return width, height
