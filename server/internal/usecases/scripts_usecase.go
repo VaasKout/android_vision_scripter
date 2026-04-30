@@ -69,6 +69,7 @@ func (i *interactorImpl) SaveStep(
 	if step == nil || serial == "" || name == "" {
 		return false
 	}
+
 	runnerPath := i.getScriptRunner(serial, name)
 	if runnerPath == "" {
 		return false

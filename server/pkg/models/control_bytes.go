@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/binary"
+	"encoding/json"
 )
 
 // Size of control bytes buffer
@@ -11,6 +12,31 @@ const (
 
 // ControlBytes ...
 type ControlBytes []byte
+
+// MarshalJSON - custom serialization
+func (b ControlBytes) MarshalJSON() ([]byte, error) {
+	ints := make([]int, len(b))
+	for i, v := range b {
+		ints[i] = int(v)
+	}
+	return json.Marshal(ints)
+}
+
+// UnmarshalJSON - custom deserialization
+func (b *ControlBytes) UnmarshalJSON(data []byte) error {
+	var ints []int
+	if err := json.Unmarshal(data, &ints); err != nil {
+		return err
+	}
+
+	result := make([]byte, len(ints))
+	for i, v := range ints {
+		result[i] = byte(v)
+	}
+
+	*b = result
+	return nil
+}
 
 // GetXY ...
 func (b *ControlBytes) GetXY() (int, int) {
