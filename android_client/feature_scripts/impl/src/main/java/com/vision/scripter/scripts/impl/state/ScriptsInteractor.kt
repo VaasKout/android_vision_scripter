@@ -1,0 +1,114 @@
+package com.vision.scripter.scripts.impl.state
+
+import com.vision.scripter.coroutines.api.CoroutineScopeFactory
+import com.vision.scripter.data.api.ScripterRepository
+import com.vision.scripter.network.api.ApiResponse
+import com.vision.scripter.ui.CommandFlow
+import com.vision.scripter.ui.states.LoadingState
+import dagger.hilt.android.scopes.ViewModelScoped
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@ViewModelScoped
+internal class ScriptsInteractor @Inject constructor(
+    coroutineScopeFactory: CoroutineScopeFactory,
+    private val scripterRepository: ScripterRepository,
+    private val uiStateMapper: ScriptsUiStateMapper,
+) : ScriptsUiStateHolder {
+
+    private val _stateFlow = MutableStateFlow(ScriptsState())
+    private val stateFlow: StateFlow<ScriptsState> = _stateFlow.asStateFlow()
+    private val coroutineScope: CoroutineScope =
+        coroutineScopeFactory.createBackgroundScope("scripts_interactor")
+
+    private val currentState: ScriptsState
+        get() = _stateFlow.value
+
+    override val uiStateFlow: SharedFlow<ScriptsUiState>
+        get() = stateFlow.map(uiStateMapper::map)
+            .shareIn(coroutineScope, SharingStarted.WhileSubscribed(), replay = 1)
+
+    override val uiCommandsFlow: CommandFlow<ScriptsUiCommand> = CommandFlow(coroutineScope)
+
+    override fun initArgs(serial: String) {
+        _stateFlow.update {
+            it.copy(serial = serial)
+        }
+    }
+
+    override fun onLoadData(onStart: Boolean) {
+        coroutineScope.launch {
+            _stateFlow.update {
+                it.copy(
+                    loadingState = if (onStart) LoadingState.LoadingOnStart
+                    else LoadingState.RefreshLoading,
+                )
+            }
+
+            when (val result = scripterRepository.getScripts(currentState.serial)) {
+                is ApiResponse.Success -> {
+                    _stateFlow.update { it.copy(scripts = result.data) }
+                }
+
+                is ApiResponse.Error -> {
+                    uiCommandsFlow.tryEmit(ScriptsUiCommand.ShowNetworkError)
+                }
+            }
+
+            if (!onStart) delay(500)
+            _stateFlow.update {
+                it.copy(
+                    loadingState = LoadingState.None
+                )
+            }
+        }
+    }
+
+    override fun onPlayScript(name: String) {
+        coroutineScope.launch {
+            val started = scripterRepository.runScript(
+                serial = currentState.serial,
+                name = name,
+            )
+            if (!started) uiCommandsFlow.tryEmit(ScriptsUiCommand.ShowNetworkError)
+        }
+    }
+
+    override fun onDeleteScript(name: String) {
+        _stateFlow.update {
+            it.copy(
+                scriptNameToDelete = name,
+            )
+        }
+    }
+
+    override fun onDismissDeleteDialog() {
+        _stateFlow.update {
+            it.copy(
+                scriptNameToDelete = "",
+            )
+        }
+    }
+
+    override fun onConfirmDeleteScript() {
+        coroutineScope.launch {
+            val deleted = scripterRepository.deleteScript(
+                serial = currentState.serial,
+                name = currentState.scriptNameToDelete,
+            )
+            if (!deleted) uiCommandsFlow.tryEmit(ScriptsUiCommand.ShowNetworkError)
+            onDismissDeleteDialog()
+            onLoadData(onStart = false)
+        }
+    }
+}

@@ -1,0 +1,174 @@
+package com.vision.scripter.data.impl
+
+import com.vision.scripter.data.api.ScripterRepository
+import com.vision.scripter.data.api.models.AdbDevice
+import com.vision.scripter.data.api.models.AdbDevicesResponse
+import com.vision.scripter.data.api.models.CvRectangle
+import com.vision.scripter.data.api.models.KeyboardButtons
+import com.vision.scripter.data.api.models.RectangleWithText
+import com.vision.scripter.data.api.models.SaveStepRequest
+import com.vision.scripter.data.api.models.SaveRectRequest
+import com.vision.scripter.data.api.models.Script
+import com.vision.scripter.data.api.models.ScriptStep
+import com.vision.scripter.data.api.models.StreamingData
+import com.vision.scripter.data.api.models.isEmpty
+import com.vision.scripter.network.api.ApiResponse
+import com.vision.scripter.network.api.NetworkClient
+import com.vision.scripter.network.api.NetworkError
+import kotlinx.serialization.json.Json
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class ScripterRepositoryImpl @Inject constructor(
+    private val networkClient: NetworkClient,
+) : ScripterRepository {
+
+    override suspend fun getDevices(): ApiResponse<List<AdbDevice>> {
+        return when (val result = networkClient.get("devices")) {
+            is ApiResponse.Success -> {
+                val json = result.data
+                val devices = if (json.isEmpty()) listOf()
+                else Json.decodeFromString<AdbDevicesResponse>(result.data).devices
+                ApiResponse.Success(devices)
+            }
+
+            is ApiResponse.Error -> result
+        }
+    }
+
+    override suspend fun getDevicePreview(serial: String): ApiResponse<ByteArray> {
+        return when (val result = networkClient.getMultipart("preview/$serial")) {
+            is ApiResponse.Success -> {
+                val bytesArray = result.data
+                if (bytesArray.isEmpty()) {
+                    val networkError = NetworkError.ServerError("no images")
+                    ApiResponse.Error(networkError)
+                } else ApiResponse.Success(result.data.first())
+            }
+
+            is ApiResponse.Error -> result
+        }
+    }
+
+    override suspend fun pingServer(): Boolean {
+        val result = networkClient.get("ping")
+        return result is ApiResponse.Success
+    }
+
+    override suspend fun startSockets(serial: String): ApiResponse<StreamingData> {
+        return when (val result = networkClient.get("start_sockets/$serial")) {
+            is ApiResponse.Success -> {
+                val json = result.data
+                val streamingData = if (json.isEmpty()) StreamingData()
+                else Json.decodeFromString<StreamingData>(result.data)
+                ApiResponse.Success(streamingData)
+            }
+
+            is ApiResponse.Error -> result
+        }
+    }
+
+    override suspend fun saveScriptStep(
+        serial: String,
+        name: String,
+        step: ScriptStep,
+    ): Boolean {
+        if (serial.isEmpty() || name.isEmpty() || step.isEmpty()) return false
+        val saveRequest = SaveStepRequest(
+            serial = serial,
+            name = name,
+            scriptStep = step,
+        )
+        val body = Json.encodeToString(saveRequest)
+        val result = networkClient.post("save_step", body)
+        return result is ApiResponse.Success
+    }
+
+    override suspend fun saveRect(
+        serial: String,
+        rectangle: CvRectangle?,
+    ): Boolean {
+        if (rectangle.isEmpty()) return false
+        val saveRectRequest = SaveRectRequest(
+            serial = serial,
+            rectangle = rectangle,
+        )
+        val body = Json.encodeToString(saveRectRequest)
+        val result = networkClient.post("save_rectangle", body)
+        return result is ApiResponse.Success
+    }
+
+    override suspend fun findText(
+        serial: String,
+        text: String
+    ): ApiResponse<List<RectangleWithText>> {
+        return when (val result = networkClient.get("/devices/$serial/find_text?text=$text")) {
+            is ApiResponse.Success -> {
+                val json = result.data
+                val ocrData = if (json.isEmpty()) listOf()
+                else Json.decodeFromString<List<RectangleWithText>>(result.data)
+                ApiResponse.Success(ocrData)
+            }
+
+            is ApiResponse.Error -> result
+        }
+    }
+
+    override suspend fun getScripts(serial: String): ApiResponse<List<String>> {
+        return when (val result = networkClient.get("/devices/$serial/scripts")) {
+            is ApiResponse.Success -> {
+                val json = result.data
+                val streamingData = if (json.isEmpty()) listOf()
+                else Json.decodeFromString<List<String>>(result.data)
+                ApiResponse.Success(streamingData)
+            }
+
+            is ApiResponse.Error -> result
+        }
+    }
+
+    override suspend fun getScriptInfo(serial: String, name: String): ApiResponse<Script> {
+        return when (val result = networkClient.get("/devices/$serial/scripts/$name")) {
+            is ApiResponse.Success -> {
+                val json = result.data
+                val streamingData = if (json.isEmpty()) Script()
+                else Json.decodeFromString<Script>(result.data)
+                ApiResponse.Success(streamingData)
+            }
+
+            is ApiResponse.Error -> result
+        }
+    }
+
+    override suspend fun deleteScript(serial: String, name: String): Boolean {
+        return when (val result = networkClient.delete("/devices/$serial/scripts/$name")) {
+            is ApiResponse.Success -> result.data.isNotEmpty()
+            is ApiResponse.Error -> false
+        }
+    }
+
+    override suspend fun runScript(serial: String, name: String): Boolean {
+        return when (val result = networkClient.get("/devices/$serial/scripts/$name/run")) {
+            is ApiResponse.Success -> result.data.isNotEmpty()
+            is ApiResponse.Error -> false
+        }
+    }
+
+    override suspend fun resetKeyboard(
+        serial: String,
+        locale: String
+    ): ApiResponse<List<RectangleWithText>> {
+        return when (val result =
+            networkClient.get("/devices/$serial/reset_keyboard?locale=$locale")) {
+            is ApiResponse.Success -> {
+                val json = result.data
+                val keyboardButtons = if (json.isEmpty()) KeyboardButtons()
+                else Json.decodeFromString<KeyboardButtons>(result.data)
+                ApiResponse.Success(keyboardButtons.buttons)
+            }
+
+            is ApiResponse.Error -> result
+        }
+    }
+}

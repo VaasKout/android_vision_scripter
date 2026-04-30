@@ -1,0 +1,12 @@
+<resources>
+    <string name="devices_not_found">Devices not found</string>
+
+    <string name="scripts">Scripts</string>
+    <string name="streaming">Streaming</string>
+
+    <string name="serial_key">Serial</string>
+    <string name="brand_key">Brand</string>
+    <string name="device_key">Device</string>
+    <string name="model_key">Model</string>
+    <string name="os_version_key">OS Ver.</string>
+</resources>

@@ -1,0 +1,7 @@
+<resources>
+    <string name="network_error">Check a network connection</string>
+    <string name="address_error">Wrong server address, try another</string>
+    <string name="url_hint">Address</string>
+    <string name="port_hint">Port</string>
+    <string name="save_button">Save</string>
+</resources>
