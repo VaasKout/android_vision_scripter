@@ -51,7 +51,7 @@ inet 192.168.x.x
 
 That value is your local server IP.
 
-![Example](docs/app_example.gif)
+![Example](app_example.gif)
 
 ## Device Compatibility Notice
 
