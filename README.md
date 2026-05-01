@@ -1,6 +1,8 @@
-# Android Vision Scripter
+# VDroid Scripter
 
-**Android Vision Scripter** is a tool for remotely controlling Android devices and creating automation scripts using computer vision without requiring users to manually write code or commands.
+**VDroid Scripter** stands for Visual Adnroid Scripter.
+
+This is a tool for remotely controlling Android devices and creating automation scripts using computer vision without requiring users to manually write code or commands.
 
 The project consists of two main components:
 
