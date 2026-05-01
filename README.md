@@ -1,6 +1,6 @@
 # VDroid Scripter
 
-**VDroid Scripter** stands for Visual Adnroid Scripter.
+**VDroid Scripter** stands for Visual Android Scripter.
 
 This is a tool for remotely controlling Android devices and creating automation scripts using computer vision without requiring users to manually write code or commands.
 
