@@ -4,6 +4,6 @@ import androidx.compose.runtime.Immutable
 
 @Immutable
 data class WelcomeUiState(
-    val url: String = "",
-    val port: String = "",
+    val oldUrl: String = "",
+    val oldPort: String = "",
 )

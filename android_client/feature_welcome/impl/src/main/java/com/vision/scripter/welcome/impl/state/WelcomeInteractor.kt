@@ -11,12 +11,11 @@ import com.vision.scripter.welcome.impl.ui.WelcomeUiStateHolder
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,12 +33,9 @@ class WelcomeInteractor @Inject constructor(
     private val coroutineScope: CoroutineScope =
         coroutineScopeFactory.createBackgroundScope("welcome_interactor")
 
-    private val currentState: WelcomeState
-        get() = _stateFlow.value
-
-    override val uiStateFlow: SharedFlow<WelcomeUiState>
+    override val uiStateFlow: StateFlow<WelcomeUiState?>
         get() = stateFlow.map(uiStateMapper::map)
-            .shareIn(coroutineScope, SharingStarted.WhileSubscribed(), replay = 1)
+            .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), initialValue = null)
 
     override val uiCommandsFlow: CommandFlow<WelcomeUiCommand> = CommandFlow(coroutineScope)
 
@@ -55,8 +51,8 @@ class WelcomeInteractor @Inject constructor(
                 val url = "${uri.scheme}://${uri.host}"
                 _stateFlow.update {
                     it.copy(
-                        url = url,
-                        port = if (port <= 0) "" else port.toString(),
+                        oldUrl = url,
+                        oldPort = if (port <= 0) "" else port.toString(),
                     )
                 }
                 return@launch
@@ -65,32 +61,31 @@ class WelcomeInteractor @Inject constructor(
         }
     }
 
-    override fun editUrl(url: String) {
-        _stateFlow.update { it.copy(url = url) }
-    }
-
-    override fun editPort(port: String) {
-        if (port.length > 5) return
-        _stateFlow.update { it.copy(port = port) }
-    }
-
-    override fun onApplyData() {
+    override fun onApplyData(url: String, port: String) {
         coroutineScope.launch {
-            if (currentState.url.isEmpty()) {
+            if (url.isEmpty()) {
                 uiCommandsFlow.tryEmit(WelcomeUiCommand.ShowAddressError)
                 return@launch
             }
-            val uri = currentState.url.toUri()
-            if (uri.scheme == null || uri.host == null) {
-                uiCommandsFlow.tryEmit(WelcomeUiCommand.ShowAddressError)
-                return@launch
+            val uri = url.toUri()
+
+            val fullUrl = when {
+                uri.scheme != null && uri.host != null -> {
+                    buildString {
+                        append(uri.scheme)
+                        append("://")
+                        append(uri.host)
+                        if (port.isNotEmpty()) append(":$port")
+                    }
+                }
+
+                uri.path != null -> "http://${uri.path}:${port}"
+                else -> ""
             }
 
-            val fullUrl = buildString {
-                append(uri.scheme)
-                append("://")
-                append(uri.host)
-                if (currentState.port != "") append(":${currentState.port}")
+            if (fullUrl.isEmpty()) {
+                uiCommandsFlow.tryEmit(WelcomeUiCommand.ShowAddressError)
+                return@launch
             }
 
             dataStoreRepository.setServerUrl(fullUrl)
@@ -99,7 +94,6 @@ class WelcomeInteractor @Inject constructor(
                 uiCommandsFlow.tryEmit(WelcomeUiCommand.ShowAddressError)
                 return@launch
             }
-
             uiCommandsFlow.tryEmit(WelcomeUiCommand.NavigateToMain)
         }
     }

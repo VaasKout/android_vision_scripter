@@ -2,15 +2,13 @@ package com.vision.scripter.welcome.impl.ui
 
 import androidx.compose.runtime.Stable
 import com.vision.scripter.ui.CommandFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 
 @Stable
 interface WelcomeUiStateHolder {
-    val uiStateFlow: SharedFlow<WelcomeUiState>
+    val uiStateFlow: StateFlow<WelcomeUiState?>
     val uiCommandsFlow: CommandFlow<WelcomeUiCommand>
     fun onInitData()
 
-    fun editUrl(url: String)
-    fun editPort(port: String)
-    fun onApplyData()
+    fun onApplyData(url: String, port: String)
 }

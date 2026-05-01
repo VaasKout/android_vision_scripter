@@ -8,8 +8,8 @@ import javax.inject.Inject
 class WelcomeStateUiMapper @Inject constructor() {
     fun map(state: WelcomeState): WelcomeUiState {
         return WelcomeUiState(
-            url = state.url,
-            port = state.port,
+            oldUrl = state.oldUrl,
+            oldPort = state.oldPort,
         )
     }
 }

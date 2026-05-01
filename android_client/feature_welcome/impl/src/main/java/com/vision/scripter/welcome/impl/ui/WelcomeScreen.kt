@@ -12,6 +12,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -29,14 +33,26 @@ fun WelcomeScreen(
     snackbarHostState: SnackbarHostState,
 ) {
     val screenUiState = uiStateHolder.uiStateFlow.collectAsStateWithLifecycle(
-        WelcomeUiState()
+        null,
     ).value
+
+    val keyboard = LocalSoftwareKeyboardController.current
+    var urlValue by rememberSaveable { mutableStateOf("") }
+    var portValue by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         uiStateHolder.onInitData()
     }
 
-    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(screenUiState != null) {
+        if (screenUiState == null) return@LaunchedEffect
+        if (urlValue.isEmpty()) {
+            urlValue = screenUiState.oldUrl
+        }
+        if (portValue.isEmpty()) {
+            portValue = screenUiState.oldPort
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,17 +72,17 @@ fun WelcomeScreen(
             ) {
                 UrlEditText(
                     modifier = Modifier.fillMaxWidth(),
-                    url = screenUiState.url,
-                    onValueChange = {
-                        uiStateHolder.editUrl(it)
-                    }
+                    url = urlValue,
+                    onValueChange = { url ->
+                        urlValue = url
+                    },
                 )
                 PortEditText(
                     modifier = Modifier.fillMaxWidth(),
-                    port = screenUiState.port,
-                    onValueChange = {
-                        uiStateHolder.editPort(it)
-                    }
+                    port = portValue,
+                    onValueChange = { port ->
+                        portValue = port
+                    },
                 )
                 CustomButton(
                     modifier = Modifier
@@ -75,8 +91,8 @@ fun WelcomeScreen(
                     text = stringResource(R.string.save_button),
                     onClick = {
                         keyboard?.hide()
-                        uiStateHolder.onApplyData()
-                    }
+                        uiStateHolder.onApplyData(urlValue, portValue)
+                    },
                 )
             }
         }
@@ -92,9 +108,7 @@ fun UrlEditText(
     OutlinedTextField(
         modifier = modifier,
         value = url,
-        onValueChange = {
-            onValueChange(it)
-        },
+        onValueChange = onValueChange,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
         label = {
             Text(
@@ -114,9 +128,7 @@ fun PortEditText(
     OutlinedTextField(
         modifier = modifier,
         value = port,
-        onValueChange = {
-            onValueChange(it)
-        },
+        onValueChange = onValueChange,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
         label = {
             Text(
