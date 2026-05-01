@@ -51,7 +51,7 @@ inet 192.168.x.x
 
 That value is your local server IP.
 
-![Example](app_example.gif)
+<img src="app_example.gif" width="50%"/>
 
 ## Device Compatibility Notice
 
