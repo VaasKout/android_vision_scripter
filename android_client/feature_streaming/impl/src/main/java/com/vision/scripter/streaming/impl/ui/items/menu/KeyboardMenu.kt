@@ -44,7 +44,9 @@ fun KeyboardMenu(
             Icon(
                 modifier = Modifier
                     .size(32.dp)
-                    .customClickable(onClick = onKeyboardInitClick),
+                    .customClickable(
+                        onClick = onKeyboardInitClick,
+                    ),
                 imageVector = Icons.Filled.Search,
                 tint = MaterialTheme.colorScheme.onSurface,
                 contentDescription = ""

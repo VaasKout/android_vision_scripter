@@ -10,12 +10,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.rounded.Rectangle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,12 +31,10 @@ import com.vision.scripter.ui.customClickable
 fun UsualMenu(
     modifier: Modifier = Modifier,
     cvMode: CVMode,
-    expanded: Boolean,
     onScriptModeClick: () -> Unit,
-    onKeyboardClick: () -> Unit,
     onCvModeClick: () -> Unit,
-    onExpandClick: () -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
     if (expanded) {
         Column(
             modifier = modifier
@@ -59,16 +60,6 @@ fun UsualMenu(
                 modifier = Modifier
                     .size(32.dp)
                     .customClickable(
-                        onClick = onKeyboardClick,
-                    ),
-                imageVector = Icons.Filled.Keyboard,
-                tint = MaterialTheme.colorScheme.onSurface,
-                contentDescription = ""
-            )
-            Icon(
-                modifier = Modifier
-                    .size(32.dp)
-                    .customClickable(
                         onClick = onCvModeClick,
                     ),
                 imageVector = when (cvMode) {
@@ -84,7 +75,7 @@ fun UsualMenu(
             Icon(
                 modifier = Modifier
                     .size(32.dp)
-                    .customClickable(onClick = onExpandClick),
+                    .customClickable(onClick = { expanded = !expanded }),
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 tint = MaterialTheme.colorScheme.onSurface,
                 contentDescription = ""
@@ -102,7 +93,7 @@ fun UsualMenu(
                 shape = RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp),
             )
             .customClickable(
-                onClick = onExpandClick,
+                onClick = { expanded = !expanded },
             ),
         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
         tint = MaterialTheme.colorScheme.onSurface,
@@ -116,10 +107,7 @@ fun UsualMenu(
 private fun UsualMenuPreview() {
     UsualMenu(
         cvMode = CVMode.NO_CV,
-        expanded = true,
         onScriptModeClick = {},
-        onKeyboardClick = {},
         onCvModeClick = {},
-        onExpandClick = {},
     )
 }
