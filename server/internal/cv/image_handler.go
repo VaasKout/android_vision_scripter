@@ -23,6 +23,9 @@ type ImageHandler interface {
 }
 
 func (c *cvImpl) FindAllRectangles(img *gocv.Mat) ([]image.Rectangle, error) {
+	if img == nil {
+		return []image.Rectangle{}, errors.New("img empty")
+	}
 	imgRectangles, err := c.createRectangles(img)
 	if err != nil {
 		return []image.Rectangle{}, err
@@ -36,6 +39,10 @@ func (c *cvImpl) FindImage(
 	img *gocv.Mat,
 	template string,
 ) (*image.Rectangle, error) {
+	if img == nil || template == "" {
+		return nil, errors.New("empty params")
+	}
+
 	templateMat := gocv.IMRead(template, gocv.IMReadColor)
 	if templateMat.Empty() {
 		return nil, errors.New("could not read template")
@@ -51,7 +58,7 @@ func (c *cvImpl) FindImage(
 
 	_, maxVal, _, maxLoc := gocv.MinMaxLoc(result)
 	if maxVal < MatchCoefficient {
-		return nil, errors.New("no such image")
+		return nil, errors.New("template not found")
 	}
 
 	var rectangle = image.Rect(

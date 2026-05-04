@@ -65,7 +65,3 @@ func New(
 	go interactor.FillUpDevicesCache()
 	return interactor
 }
-
-func (i *interactorImpl) downloadResources() {
-
-}

@@ -23,8 +23,6 @@ var keyboardSizeMap = map[string]int{
 	"rus":  32,
 }
 
-// TODO under development
-
 // KeyboardHandler ...
 type KeyboardHandler interface {
 	GetKeyboardKeys(
@@ -34,7 +32,7 @@ type KeyboardHandler interface {
 	ResetKeyboardKeys(
 		keyboardDir string,
 		tesseractDir string,
-		img gocv.Mat,
+		screenshot string,
 		lang string,
 		upperCase bool,
 	) []OCRResult
@@ -68,13 +66,26 @@ func (c *cvImpl) GetKeyboardKeys(
 func (c *cvImpl) ResetKeyboardKeys(
 	keyboardDir string,
 	tesseractDir string,
-	img gocv.Mat,
+	screenshot string,
 	lang string,
 	upperCase bool,
 ) []OCRResult {
-	rectangles, err := c.FindAllRectangles(&img)
+	var result = []OCRResult{}
+
+	img := gocv.IMRead(screenshot, gocv.IMReadColor)
+	defer img.Close()
+	if img.Empty() {
+		return result
+	}
+
+	gray := gocv.NewMat()
+	defer gray.Close()
+	gocv.CvtColor(img, &gray, gocv.ColorBGRToGray)
+
+	rectangles, err := c.FindAllRectangles(&gray)
 	if err != nil {
 		c.logAPI.Error(err.Error())
+		return result
 	}
 
 	rectMatrix := c.sortRectanglesBySize(rectangles)
@@ -88,7 +99,6 @@ func (c *cvImpl) ResetKeyboardKeys(
 		BlackTheme,
 	)
 
-	var result = []OCRResult{}
 	for _, rect := range keyboardRects {
 		cropped := img.Region(rect)
 		ocrResult, err := c.FindTextRectangles(&cropped, tesseractDir, ocrParams)

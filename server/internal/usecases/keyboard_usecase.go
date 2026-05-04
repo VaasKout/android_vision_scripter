@@ -10,8 +10,6 @@ import (
 	"gocv.io/x/gocv"
 )
 
-// TODO under development
-
 // KeyboardUseCase ...
 type KeyboardUseCase interface {
 	GetKeyboardKeys(serial string, locale string) []cv.OCRResult
@@ -102,12 +100,6 @@ func (i *interactorImpl) ResetKeyboardKeys(
 		return []cv.OCRResult{}
 	}
 
-	img := gocv.IMRead(screenshot, gocv.IMReadColor)
-	if img.Empty() {
-		return []cv.OCRResult{}
-	}
-	defer img.Close()
-
 	var device = i.GetDevice(serial)
 	var modelOs = device.ToModelOs()
 	if modelOs == "" {
@@ -126,7 +118,7 @@ func (i *interactorImpl) ResetKeyboardKeys(
 	return i.cv.ResetKeyboardKeys(
 		keyboardDir,
 		tesseractDir,
-		img,
+		screenshot,
 		tesseractLocale,
 		upperCase,
 	)
