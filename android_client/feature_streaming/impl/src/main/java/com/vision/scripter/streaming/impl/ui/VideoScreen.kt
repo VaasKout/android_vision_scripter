@@ -46,8 +46,11 @@ fun VideoScreen(
                         .align(Alignment.TopEnd)
                         .padding(top = 128.dp),
                     cvMode = state.menuState.cvMode,
+                    expanded = state.menuState.expanded,
                     onScriptModeClick = uiStateHolder::onScriptModeClicked,
+                    onKeyboardClick = uiStateHolder::onKeyboardClicked,
                     onCvModeClick = uiStateHolder::onCvModeClicked,
+                    onExpandClick = uiStateHolder::onExpandClicked,
                 )
             }
 
@@ -89,7 +92,6 @@ fun VideoScreen(
                 )
             }
 
-            // TODO under development
             is MenuState.KeyboardEdit -> {
                 KeyboardMenu(
                     modifier = Modifier

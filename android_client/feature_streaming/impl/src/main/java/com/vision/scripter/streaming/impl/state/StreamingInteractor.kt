@@ -288,6 +288,17 @@ class StreamingInteractor @Inject constructor(
         }
     }
 
+    override fun onExpandClicked() {
+        val menuState = currentState.menuState
+        if (menuState is MenuState.Usual) {
+            _stateFlow.update {
+                it.copy(
+                    menuState = menuState.copy(expanded = !menuState.expanded)
+                )
+            }
+        }
+    }
+
     override fun onSaveClicked() {
         coroutineScope.launch {
             val menuState = currentState.menuState
@@ -376,10 +387,14 @@ class StreamingInteractor @Inject constructor(
                 }
             }
 
-            if (menuState is MenuState.Usual || menuState is MenuState.Recording) {
+            if (menuState is MenuState.Recording || menuState is MenuState.KeyboardEdit) {
                 cvUseCase.clearAllRectangles()
                 _stateFlow.update {
-                    it.copy(menuState = MenuState.Usual())
+                    it.copy(
+                        menuState = MenuState.Usual(
+                            expanded = true,
+                        )
+                    )
                 }
             }
 
@@ -517,9 +532,14 @@ class StreamingInteractor @Inject constructor(
                     val rectangle = it.rectangle ?: return@mapNotNull null
                     it.copy(rectangle = rectangle.adjustToClient(screenSizes))
                 }
+                val updatedMenuState = (currentState.menuState as? MenuState.KeyboardEdit)?.copy(
+                    isLoadingKeyboard = false,
+                ) ?: currentState.menuState
+
                 _stateFlow.update {
                     it.copy(
                         keyboard = it.keyboard.copy(buttons = buttons),
+                        menuState = updatedMenuState,
                     )
                 }
             }

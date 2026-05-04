@@ -41,6 +41,7 @@ data class StreamingState(
 sealed interface MenuState {
     data class Usual(
         val cvMode: CVMode = CVMode.NO_CV,
+        val expanded: Boolean = false,
     ) : MenuState
 
     data class Recording(

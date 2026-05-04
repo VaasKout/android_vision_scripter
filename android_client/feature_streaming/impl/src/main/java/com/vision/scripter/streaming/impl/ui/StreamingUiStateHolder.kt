@@ -28,6 +28,7 @@ interface StreamingUiStateHolder {
 
     fun onRecordingClicked()
     fun onSaveClicked()
+    fun onExpandClicked()
     fun onCancelClicked()
 
     fun onSavedRecordName(name: String)
