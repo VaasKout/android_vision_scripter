@@ -21,8 +21,9 @@ data class Script(
     val steps: List<ScriptStep> = listOf(),
 )
 
-const val APPLY_ON_TEMPLATE = "template"
-const val APPLY_ON_TEXT = "text"
+const val EVENT_ON_TEMPLATE = "event_on_template"
+const val EVENT_ON_TEXT = "event_on_text"
+const val TYPE_TEXT = "type_text"
 
 @Serializable
 data class ScriptStep(

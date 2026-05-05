@@ -6,8 +6,8 @@ import androidx.core.net.toUri
 import com.vision.scripter.coroutines.api.CoroutineScopeFactory
 import com.vision.scripter.data.api.ControlStreamer
 import com.vision.scripter.data.api.ScripterRepository
-import com.vision.scripter.data.api.models.APPLY_ON_TEMPLATE
-import com.vision.scripter.data.api.models.APPLY_ON_TEXT
+import com.vision.scripter.data.api.models.EVENT_ON_TEMPLATE
+import com.vision.scripter.data.api.models.EVENT_ON_TEXT
 import com.vision.scripter.data.api.models.ScriptStep
 import com.vision.scripter.data.api.models.StepEvent
 import com.vision.scripter.data.api.models.StreamingData
@@ -367,8 +367,8 @@ class StreamingInteractor @Inject constructor(
     private fun getAction(): String {
         val record = currentState.record
         return when {
-            record.templateSelectMode == CvSelectMode.APPLY_EVENT -> APPLY_ON_TEMPLATE
-            record.textSelectMode == CvSelectMode.APPLY_EVENT -> APPLY_ON_TEXT
+            record.templateSelectMode == CvSelectMode.APPLY_EVENT -> EVENT_ON_TEMPLATE
+            record.textSelectMode == CvSelectMode.APPLY_EVENT -> EVENT_ON_TEXT
             else -> ""
         }
     }
