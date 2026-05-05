@@ -7,8 +7,9 @@ import (
 
 // Script actions
 const (
-	ApplyOnTemplate = "template"
-	ApplyOnText     = "text"
+	EventOnTemplate = "event_on_template"
+	EventOnText     = "event_on_text"
+	TypeText        = "type_text"
 )
 
 // Script ...

@@ -189,7 +189,7 @@ func (i *interactorImpl) findRectangleByStep(
 			return imgRect, fmt.Errorf("template %d.png not found", step.ID)
 		}
 
-		if step.Action == models.ApplyOnTemplate {
+		if step.Action == models.EventOnTemplate {
 			imgRect = templateRect
 		}
 	}
@@ -217,7 +217,7 @@ func (i *interactorImpl) findRectangleByStep(
 			return imgRect, fmt.Errorf("text %s not found", step.Text)
 		}
 
-		if step.Action == models.ApplyOnText {
+		if step.Action == models.EventOnText {
 			imgRect = textRect
 		}
 	}
